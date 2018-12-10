@@ -47,7 +47,7 @@ import (
 // It is incremented whenever an incompatibility between the generated code and
 // the grpc package is introduced; the generated code references
 // a constant, grpc.SupportPackageIsVersionN (where N is generatedCodeVersion).
-const generatedCodeVersion = 4
+const generatedCodeVersion = 6
 
 // Paths for packages used by code generated in this file,
 // relative to the import_prefix of the generator.Generator.
@@ -186,6 +186,7 @@ func (g *grpc) generateService(file *generator.FileDescriptor, service *pb.Servi
 
 	var methodIndex, streamIndex int
 	serviceDescVar := "_" + servName + "_serviceDesc"
+	serviceInfoVar := "_" + servName + "_serviceInfo"
 	// Client method implementations.
 	for _, method := range service.Method {
 		var descExpr string
@@ -198,7 +199,7 @@ func (g *grpc) generateService(file *generator.FileDescriptor, service *pb.Servi
 			descExpr = fmt.Sprintf("&%s.Streams[%d]", serviceDescVar, streamIndex)
 			streamIndex++
 		}
-		g.generateClientMethod(servName, fullServName, serviceDescVar, method, descExpr)
+		g.generateClientMethod(servName, fullServName, serviceDescVar, serviceInfoVar, method, descExpr)
 	}
 
 	// Server interface.
@@ -266,6 +267,7 @@ func (g *grpc) generateService(file *generator.FileDescriptor, service *pb.Servi
 	g.P("},")
 	g.P("Metadata: \"", file.GetName(), "\",")
 	g.P("}")
+	g.P("var ", serviceInfoVar, " = ", grpcPkg, ".ServiceInfoForDesc(&", serviceDescVar, ")")
 	g.P()
 }
 
@@ -287,7 +289,7 @@ func (g *grpc) generateClientSignature(servName string, method *pb.MethodDescrip
 	return fmt.Sprintf("%s(ctx %s.Context%s, opts ...%s.CallOption) (%s, error)", methName, contextPkg, reqArg, grpcPkg, respName)
 }
 
-func (g *grpc) generateClientMethod(servName, fullServName, serviceDescVar string, method *pb.MethodDescriptorProto, descExpr string) {
+func (g *grpc) generateClientMethod(servName, fullServName, serviceDescVar, serviceInfoVar string, method *pb.MethodDescriptorProto, descExpr string) {
 	sname := fmt.Sprintf("/%s/%s", fullServName, method.GetName())
 	methName := generator.CamelCase(method.GetName())
 	inType := g.typeName(method.GetInputType())
@@ -300,7 +302,7 @@ func (g *grpc) generateClientMethod(servName, fullServName, serviceDescVar strin
 	if !method.GetServerStreaming() && !method.GetClientStreaming() {
 		g.P("out := new(", outType, ")")
 		// TODO: Pass descExpr to Invoke.
-		g.P(`err := c.cc.Invoke(ctx, "`, sname, `", in, out, opts...)`)
+		g.P("err := c.cc.Invoke(", grpcPkg, ".NewContextWithServiceInfo(ctx, &", serviceInfoVar, `), "`, sname, `", in, out, opts...)`)
 		g.P("if err != nil { return nil, err }")
 		g.P("return out, nil")
 		g.P("}")
@@ -308,7 +310,7 @@ func (g *grpc) generateClientMethod(servName, fullServName, serviceDescVar strin
 		return
 	}
 	streamType := unexport(servName) + methName + "Client"
-	g.P("stream, err := c.cc.NewStream(ctx, ", descExpr, `, "`, sname, `", opts...)`)
+	g.P("stream, err := c.cc.NewStream(", grpcPkg, ".NewContextWithServiceInfo(ctx, &", serviceInfoVar, "), ", descExpr, `, "`, sname, `", opts...)`)
 	g.P("if err != nil { return nil, err }")
 	g.P("x := &", streamType, "{stream}")
 	if !method.GetClientStreaming() {

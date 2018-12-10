@@ -196,7 +196,7 @@ var _ grpc.ClientConn
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
+const _ = grpc.SupportPackageIsVersion6
 
 // DeprecatedServiceClient is the client API for DeprecatedService service.
 //
@@ -220,7 +220,7 @@ func NewDeprecatedServiceClient(cc *grpc.ClientConn) DeprecatedServiceClient {
 // Deprecated: Do not use.
 func (c *deprecatedServiceClient) DeprecatedCall(ctx context.Context, in *DeprecatedRequest, opts ...grpc.CallOption) (*DeprecatedResponse, error) {
 	out := new(DeprecatedResponse)
-	err := c.cc.Invoke(ctx, "/deprecated.DeprecatedService/DeprecatedCall", in, out, opts...)
+	err := c.cc.Invoke(grpc.NewContextWithServiceInfo(ctx, &_DeprecatedService_serviceInfo), "/deprecated.DeprecatedService/DeprecatedCall", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -270,3 +270,4 @@ var _DeprecatedService_serviceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "deprecated/deprecated.proto",
 }
+var _DeprecatedService_serviceInfo = grpc.ServiceInfoForDesc(&_DeprecatedService_serviceDesc)

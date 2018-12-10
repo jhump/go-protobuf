@@ -181,7 +181,7 @@ var _ grpc.ClientConn
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
+const _ = grpc.SupportPackageIsVersion6
 
 // TestClient is the client API for Test service.
 //
@@ -206,7 +206,7 @@ func NewTestClient(cc *grpc.ClientConn) TestClient {
 
 func (c *testClient) UnaryCall(ctx context.Context, in *SimpleRequest, opts ...grpc.CallOption) (*SimpleResponse, error) {
 	out := new(SimpleResponse)
-	err := c.cc.Invoke(ctx, "/grpc.testing.Test/UnaryCall", in, out, opts...)
+	err := c.cc.Invoke(grpc.NewContextWithServiceInfo(ctx, &_Test_serviceInfo), "/grpc.testing.Test/UnaryCall", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +214,7 @@ func (c *testClient) UnaryCall(ctx context.Context, in *SimpleRequest, opts ...g
 }
 
 func (c *testClient) Downstream(ctx context.Context, in *SimpleRequest, opts ...grpc.CallOption) (Test_DownstreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_Test_serviceDesc.Streams[0], "/grpc.testing.Test/Downstream", opts...)
+	stream, err := c.cc.NewStream(grpc.NewContextWithServiceInfo(ctx, &_Test_serviceInfo), &_Test_serviceDesc.Streams[0], "/grpc.testing.Test/Downstream", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +246,7 @@ func (x *testDownstreamClient) Recv() (*StreamMsg, error) {
 }
 
 func (c *testClient) Upstream(ctx context.Context, opts ...grpc.CallOption) (Test_UpstreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_Test_serviceDesc.Streams[1], "/grpc.testing.Test/Upstream", opts...)
+	stream, err := c.cc.NewStream(grpc.NewContextWithServiceInfo(ctx, &_Test_serviceInfo), &_Test_serviceDesc.Streams[1], "/grpc.testing.Test/Upstream", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -280,7 +280,7 @@ func (x *testUpstreamClient) CloseAndRecv() (*SimpleResponse, error) {
 }
 
 func (c *testClient) Bidi(ctx context.Context, opts ...grpc.CallOption) (Test_BidiClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_Test_serviceDesc.Streams[2], "/grpc.testing.Test/Bidi", opts...)
+	stream, err := c.cc.NewStream(grpc.NewContextWithServiceInfo(ctx, &_Test_serviceInfo), &_Test_serviceDesc.Streams[2], "/grpc.testing.Test/Bidi", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -445,3 +445,4 @@ var _Test_serviceDesc = grpc.ServiceDesc{
 	},
 	Metadata: "grpc/grpc.proto",
 }
+var _Test_serviceInfo = grpc.ServiceInfoForDesc(&_Test_serviceDesc)
